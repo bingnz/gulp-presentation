@@ -1,5 +1,7 @@
 'use strict';
 
+var connectPort = 12345; 
+
 var pkg = require('./package.json'),
   gulp = require('gulp'),
   gutil = require('gulp-util'),
@@ -82,12 +84,13 @@ gulp.task('clean:images', function(done) {
 gulp.task('connect', ['build'], function() {
   connect.server({
     root: 'dist',
-    livereload: true
+    livereload: true,
+    port: connectPort
   });
 });
 
 gulp.task('open', ['connect'], function (done) {
-  opn('http://localhost:8080', done);
+  opn('http://localhost:' + connectPort, done);
 });
 
 gulp.task('watch', function() {

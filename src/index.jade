@@ -13,59 +13,133 @@ html
 
       section
         h1 Front end build pipelines using Gulp
+        p
+          img(src="images/gulp.png", height="200")
 
       section
-        h2 Keyboard Interaction
-        h3 Powered by <a href="https://github.com/markdalgleish/bespoke-keys">bespoke-keys</a>
+        h2 What's a front end build pipeline?
+        br
+        ul.bullet
+          li
+            img(src="images/build-pipeline.png", width="95%")
 
       section
-        h2 Touch Interaction
-        h3 Powered by <a href="https://github.com/markdalgleish/bespoke-touch">bespoke-touch</a>
-
+        h2 And Gulp?
+        ul.bullet
+          li It's a JavaScript Streaming build system
+          li Build tasks run in parallel
+          li It's just code (as opposed to Grunt)
+          
       section
-        h2 Responsive Slides
-        h3 Powered by <a href="https://github.com/markdalgleish/bespoke-scale">bespoke-scale</a>
-
-      section
-        h2 Bullet List
-        h3.bullet Powered by <a href="https://github.com/markdalgleish/bespoke-bullets">bespoke-bullets</a>
-        ul
-          li Bullet 1
-          li Bullet 2
-          li Bullet 3
-
-      section
-        h2 Syntax Highlighting
-        h3 Powered by <a href="http://twitter.com/LeaVerou">Lea Verou</a>'s <a href="https://github.com/LeaVerou/prism">Prism</a>
+        h2 Example
         pre
           code.language-javascript.
-            bespoke.from('article', [
-              classes(),
-              keys(),
-              touch(),
-              bullets('li, .bullet')
-            ]);
+            var gulp = require('gulp');
+            var pkg = require('./package.json');
+            var concat = require('gulp-concat');
+            var minify = require('gulp-minify');
+            var jshint = require('gulp-jshint');
+            var spawn = require('child_process').spawn;
 
-      section(data-bespoke-hash='named-route')
-        h2 Named Route
-        h3 Powered by <a href="https://github.com/markdalgleish/bespoke-hash">bespoke-hash</a>
-        p Look up! This route has been named with a <em>'data-bespoke-hash'</em> attribute.
+            var scriptFiles = './src/**/*.js';
 
-      section.emphatic-text(data-bespoke-backdrop='emphatic')
-        h2 Emphatic Slide!
-        h3 Powered by <a href="https://github.com/markdalgleish/bespoke-backdrop">bespoke-backdrop</a>
+            gulp.task('compile', function() {
+              // concat all scripts, minify, and output
+              gulp.src(scriptFiles)
+                .pipe(concat({fileName: pkg.name + ".js"})
+                .pipe(minify())
+                .pipe(gulp.dest('./dist/'));
+            });
+
+            gulp.task('test', function() {
+              // lint our scripts
+              gulp.src(scriptFiles).pipe(jshint());
+            
+              // run our tests
+              spawn('npm', ['test'], {stdio: 'inherit'});
+            });
+                
+              gulp.task('default', function() {
+                gulp.run('test', 'compile');
+                gulp.watch(scriptFiles, function() {
+                  gulp.run('test', 'compile');
+              });
+            });
+
+      section.background-image.streams
+        h2 Streaming?
 
       section
-        h2.bullet Just the beginning...
-        br
+        h2 Node.Js Streams
+        blockquote
+          | We should have some ways of connecting programs like garden hose --screw in
+          |  another segment when it becomes necessary to massage data in
+          |  another way. This is the way of IO also.
+          p
+            br
+            cite.
+               Doug McIlroy. October 11, 1964
+        ul.bullet
+          li Unix pipes!
+
+      section
+        pre
+          code.language-javascript.
+            var http = require('http');
+            var fs = require('fs');
+
+            var server = http.createServer(function (req, res) {
+                var stream = fs.createReadStream(__dirname + '/data.txt');
+                stream.pipe(res);
+            });
+            server.listen(8000);
+
+      section
+        h2 Vinyl
+        p.
+          Gulp uses a file system called Vinyl to stream one file at a time
+        ul.bullet
+          li Tasks run in parallel
+          li Streams mean files are processed in parallel
+          li = Fast
+
+      section
+        h2 OK. Why?
+        ul.bullet
+          li Do work at build time rather than run time
+          li We can catch errors earlier
+          li We can serve static files (control caching etc.)
+          li Visual Studio support
+
+      section
+        h2 What can it do?
+        ul.bullet
+          li Compile LESS
+          li Minify CSS
+          li Minify (uglify) JavaScript
+          li Compile TypeScript
+          li Minify SVGs
+          li Loads of plugins, and pretty easy to make more
+
+      section
+        h2 Watch
+        ul.bullet
+          li We can make changes without a full rebuild
+          li Can run from Visual Studio
+
+      section
+        h2 Demo
         ul
-          li Edit <a href="http://jade-lang.com/">Jade</a> markup in <em>'src/index.jade'</em>
-          li Edit <a href="http://learnboost.github.io/stylus/">Stylus</a> styles in <em>'src/styles/main.styl'</em>
-          li Edit JavaScript in <em>'src/scripts/main.js'</em>
-        br
-        ul
-          li
-            strong Enjoy! :)
-            a(href='http://twitter.com/markdalgleish')  -@markdalgleish
+          li npm init
+          li gulpfile.js
+          li npm install
+          li package.json
+          li etc.
+
+      section
+        h2 More Node stuff
+        ul.bullet
+          li ShrinkWrap and Semantic Versioning
+          li TeamCity integration
 
     script(src='build/build.js')
