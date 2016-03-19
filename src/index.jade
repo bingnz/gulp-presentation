@@ -32,12 +32,12 @@ html
           
       section
         h2 Example
-        pre
+        pre.smaller
           code.language-javascript.
             var gulp = require('gulp');
             var pkg = require('./package.json');
             var concat = require('gulp-concat');
-            var minify = require('gulp-minify');
+            var uglify = require('gulp-uglify');
             var jshint = require('gulp-jshint');
             var spawn = require('child_process').spawn;
 
@@ -47,25 +47,68 @@ html
               // concat all scripts, minify, and output
               gulp.src(scriptFiles)
                 .pipe(concat({fileName: pkg.name + ".js"})
-                .pipe(minify())
+                .pipe(uglify())
                 .pipe(gulp.dest('./dist/'));
             });
 
             gulp.task('test', function() {
               // lint our scripts
               gulp.src(scriptFiles).pipe(jshint());
-            
               // run our tests
               spawn('npm', ['test'], {stdio: 'inherit'});
             });
                 
-              gulp.task('default', function() {
-                gulp.run('test', 'compile');
-                gulp.watch(scriptFiles, function() {
-                  gulp.run('test', 'compile');
-              });
+            gulp.task('default', ['test', 'compile'], function() {
+                gulp.watch(scriptFiles, ['test', 'compile']);
             });
+            
+      section
+        h2 Hang on... what about Grunt?
+        div.bullet
+          p Grunt does a similar job. But...
+            ul.bullet
+            li It's configuration based
+            li Steps are disconnected: you need temp files
+            li That leads to plugins doing too much
 
+      section
+        h2 Grunt problems
+        p This section from the Grunt documentation illustrates the problem...
+        blockquote
+          | "Now let's configure the 
+          code.language-javascript grunt-contrib-uglify
+          |  plugin, which minifies the JavaScript code":
+        pre.smaller
+          code.language-javascript.
+            uglify: {
+                options: {
+                    // the banner is inserted at the top of the output
+                    banner: '/*! <%= pkg.name %>
+                        <%= grunt.template.today("dd-mm-yyyy") %> */\n'
+                },
+                dist: {
+                    files: {
+                    'dist/<%= pkg.name %>.min.js':
+                        ['<%= concat.dist.dest %>']
+                    }
+                }
+            }
+
+      section
+        h2 Grunt problems
+        p The Gulp way is to focus on one thing at a time
+        pre.smaller
+          code.language-javascript.
+            var banner = '/*! <%= pkg.name %>
+                        <%= template.today("dd-mm-yyyy") %> */\n';
+            
+            gulp.task('javascript', function() {
+                return gulp.src('src/*.js')
+                    .pipe(uglify({keepBreaks:true}))
+                    .pipe(header(banner))
+                    .pipe(gulp.dest('release'));
+            });
+ 
       section.background-image.streams
         h2 Streaming?
 
@@ -96,9 +139,9 @@ html
 
       section
         h2 Vinyl
-        p.
-          Gulp uses a file system called Vinyl to stream one file at a time
-        ul.bullet
+        p Gulp uses a virtual file system called Vinyl to stream one file at a time
+        div.bullet
+          ul
           li Tasks run in parallel
           li Streams mean files are processed in parallel
           li = Fast
@@ -113,16 +156,25 @@ html
 
       section
         h2 What can it do?
-        ul.bullet
-          li Compile LESS
-          li Minify CSS
-          li Minify (uglify) JavaScript
-          li Compile TypeScript
-          li Minify SVGs
-          li Loads of plugins, and pretty easy to make more
+        div.bullet
+          ul
+            li Compile LESS
+            li Minify CSS
+            li Minify (uglify) JavaScript
+            li Compile TypeScript
+            li Minify SVGs
+            li Loads of plugins, and pretty easy to make more
 
       section
-        h2 Watch
+        h2 Speaking of LESS and SVGs...
+        ul.bullet
+          li <code>svgInline</code> and <code>imageInline</code> are gone
+          li Use <code>data-uri</code> instead
+          li Minify SVGs first!
+          li If you need multilple different colours, use a plugin!
+          
+      section
+        h2 Watch: incremental builds
         ul.bullet
           li We can make changes without a full rebuild
           li Can run from Visual Studio
@@ -141,5 +193,15 @@ html
         ul.bullet
           li ShrinkWrap and Semantic Versioning
           li TeamCity integration
+          
+      section
+        h2 Gulp 4
+        ul.bullet
+          li Dependencies are gone
+          li Replaced with 
+            code gulp.series() 
+            | and 
+            code gulp.parallel()
+          li: a(href="http://fettblog.eu/gulp-4-parallel-and-series/"): |http://fettblog.eu/gulp-4-parallel-and-series/
 
     script(src='build/build.js')
